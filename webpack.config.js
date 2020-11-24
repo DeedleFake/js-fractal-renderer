@@ -1,3 +1,5 @@
+// @format
+
 const path = require('path')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 
@@ -28,5 +30,9 @@ module.exports = {
 	devtool: 'source-map',
 	optimization: {
 		minimize: false,
+	},
+	devServer: {
+		port: 3000,
+		contentBase: path.resolve(__dirname, 'dist'),
 	},
 }

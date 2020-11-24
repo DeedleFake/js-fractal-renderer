@@ -1,5 +1,6 @@
 // @format
 
-export const Samples = 10
-export const MaxIterations = 1500
-export const IterHueAdjust = 800
+export const Samples = 2
+export const MaxIterations = 400
+export const IterHueAdjust = 300
+export const Threshold = 4

@@ -8,31 +8,39 @@ import { linearToRGB, rgbToLinear } from './linear'
 import WorkerPool from './workerPool'
 import RenderRowWorker from 'worker-loader!./workers/renderRow'
 
-const renderers = new WorkerPool(RenderRowWorker, 8)
+const renderers = new WorkerPool(RenderRowWorker, 16)
 
 const renderRow = async (
-	img: ImageData,
+	img: { width: number; height: number },
 	position: Complex,
 	height: number,
 	y: number,
-) => renderers.run({ img, position, height, y })
+): Promise<Uint8Array> => renderers.run({ img, position, height, y }) as any
 
 const render = async (img: ImageData, position: Complex, height: number) => {
 	let progress = 0
 	document.getElementById('progress').innerHTML = `0/${img.height}`
 
-	let workers = []
+	let workers = new Array(img.height)
 	for (let y = 0; y < img.height; y++) {
-		workers.push(
-			(async (y: number) => {
-				await renderRow(img, position, height, y)
+		workers[y] = (async (y: number) => {
+			const row = await renderRow(
+				{ width: img.width, height: img.height },
+				position,
+				height,
+				y,
+			)
 
-				progress++
-				document.getElementById(
-					'progress',
-				).innerHTML = `${progress}/${img.height}`
-			})(y),
-		)
+			const start = y * img.width * 4
+			for (let i = 0; i < row.length; i++) {
+				img.data[start + i] = row[i]
+			}
+
+			progress++
+			document.getElementById(
+				'progress',
+			).innerHTML = `${progress}/${img.height}`
+		})(y)
 	}
 	await Promise.all(workers)
 

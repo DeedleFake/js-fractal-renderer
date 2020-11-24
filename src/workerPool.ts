@@ -1,12 +1,13 @@
 // @format
 
 import { Message } from './workers'
+import type WebpackWorker from 'worker-loader!'
 
 interface Constructor<T> {
 	new (): T
 }
 
-class WorkerPool<T extends import('worker-loader!').default<D, R>, D, R> {
+class WorkerPool<T extends WebpackWorker<D, R>, D, R> {
 	workers: Array<T>
 	prev = 0
 	messageID = 0
@@ -15,24 +16,25 @@ class WorkerPool<T extends import('worker-loader!').default<D, R>, D, R> {
 		this.workers = new Array(size).fill(null).map(() => new type())
 	}
 
-	getWorker() {
+	getWorker(): T {
 		this.prev = (this.prev + 1) % this.workers.length
 		return this.workers[this.prev]
 	}
 
-	async run(data: D) {
+	async run(data: D): Promise<R> {
 		return new Promise<R>((resolve, reject) => {
 			const w = this.getWorker()
 
 			const messageID = this.messageID++
-			w.onmessage = ({ data: { id, data } }: MessageEvent<Message<R>>) => {
+			const listener = ({ data: { id, data } }: MessageEvent<Message<R>>) => {
 				if (id !== messageID) {
 					return
 				}
 
-				w.onmessage = null
+				w.removeEventListener('message', listener)
 				resolve(data)
 			}
+			w.addEventListener('message', listener)
 
 			w.postMessage({ id: messageID, data })
 		})

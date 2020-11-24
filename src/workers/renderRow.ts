@@ -7,45 +7,51 @@ import Complex from '../complex'
 
 import { Message } from './index'
 
-const mandelbrotIter = (c: Complex) => {
+const ctx = (self as unknown) as import('worker-loader!').default<
+	Response,
+	Args
+>
+
+const mandelbrotIter = (c: Complex): [number, number] => {
 	let check = 0
 	let iter = 0
 	let prev = c
-	for (; iter < Config.MaxIterations && check <= 4; iter++) {
+	for (; iter < Config.MaxIterations && check <= Config.Threshold; iter++) {
 		check = prev.real * prev.real + prev.imag * prev.imag
 		prev = Complex.add(Complex.mult(prev, prev), c)
 	}
 	return [check, iter]
 }
 
-const mandelbrotColor = (check: number, iter: number) => {
-	if (check <= 4) {
+const mandelbrotColor = (check: number, iter: number): Color => {
+	if (check <= Config.Threshold) {
 		return Color.rgb(255, 255, 255, 255)
 	}
 
-	return Color.hsl((iter / Config.IterHueAdjust) * check, 1, 0.5)
+	return Color.hsl(
+		((iter / Config.IterHueAdjust) * check * 180) / Math.PI,
+		100,
+		50,
+	)
 }
 
-const setPix = (img: ImageData, x: number, y: number, col: Color) => {
-	const [r, g, b] = col.array()
+const setPix = (row: Uint8Array, x: number, col: Color) => {
+	const [r, g, b] = col.rgb().array()
 
-	const i = pixOffset(img, x, y)
-	img.data[i] = r
-	img.data[i + 1] = g
-	img.data[i + 2] = b
-	img.data[i + 3] = 255
+	const i = x * 4
+	row[i] = r
+	row[i + 1] = g
+	row[i + 2] = b
+	row[i + 3] = 255
 }
-
-const pixOffset = (img: ImageData, x: number, y: number) =>
-	y * (img.width * 4) + x * 4
 
 const renderRow = (
-	img: ImageData,
+	img: { width: number; height: number },
 	position: Complex,
 	height: number,
 	y: number,
-) => {
-	console.log(`Rendering row ${y}...`)
+): Uint8Array => {
+	const row = new Uint8Array(img.width * 4)
 
 	for (let x = 0; x < img.width; x++) {
 		const xy = new Complex(x, y)
@@ -64,20 +70,19 @@ const renderRow = (
 			)
 
 			const [check, iter] = mandelbrotIter(c)
-			const [cr, cg, cb] = mandelbrotColor(check, iter).array()
+			const [sr, sg, sb] = mandelbrotColor(check, iter).array()
 
-			//r += rgbToLinear(cr)
-			//g += rgbToLinear(cg)
-			//b += rgbToLinear(cb)
-			r += cr
-			g += cg
-			b += cb
+			//r += rgbToLinear(sr)
+			//g += rgbToLinear(sg)
+			//b += rgbToLinear(sb)
+			r += sr
+			g += sg
+			b += sb
 		}
 
 		setPix(
-			img,
+			row,
 			x,
-			y,
 			Color.rgb(
 				//linearToRGB(r / Config.Samples),
 				//linearToRGB(g / Config.Samples),
@@ -88,16 +93,20 @@ const renderRow = (
 			),
 		)
 	}
+
+	return row
 }
 
 export type Args = {
-	img: ImageData
+	img: { width: number; height: number }
 	position: Complex
 	height: number
 	y: number
 }
 
-addEventListener(
+export type Response = Uint8Array
+
+ctx.addEventListener(
 	'message',
 	({
 		data: {
@@ -105,7 +114,7 @@ addEventListener(
 			data: { img, position, height, y },
 		},
 	}: MessageEvent<Message<Args>>) => {
-		renderRow(img, position, height, y)
-		postMessage({ id })
+		const row = renderRow(img, position, height, y)
+		ctx.postMessage({ id, data: row })
 	},
 )

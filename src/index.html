@@ -2,8 +2,28 @@
 <html>
 	<head>
 		<title><%= htmlWebpackPlugin.options.title %></title>
+
+		<style type="text/css">
+			body {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.row {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-around;
+			}
+		</style>
 	</head>
 	<body>
-		<canvas id="screen" width="1024" height="1024" />
+		<div class="row">
+			<canvas id="screen" width="640" height="480" />
+		</div>
+		<div class="row">
+			<button onclick="MR.redraw(-0.5557506, -0.5556, .000000001)">
+				Reset
+			</button>
+		</div>
 	</body>
 </html>

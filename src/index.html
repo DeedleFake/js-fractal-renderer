@@ -37,10 +37,12 @@
 
 			const getMouseCoords = (ev) => {
 				const bounds = ev.target.getBoundingClientRect()
-				return [ev.clientX - bounds.x, ev.clientY - bounds.y]
+				return [ev.clientX - bounds.x, bounds.height - (ev.clientY - bounds.y)]
 			}
 
 			window.startDrag = (ev) => {
+				ev.preventDefault()
+
 				dragFrom = getMouseCoords(ev)
 				dragging = true
 			}
@@ -50,22 +52,22 @@
 					return
 				}
 
+				ev.preventDefault()
+
 				dragTo = getMouseCoords(ev)
 				if (dragFrom[0] > dragTo[0]) {
-					const tmp = dragFrom[0]
-					dragFrom[0] = dragTo[0]
-					dragTo[0] = tmp
+					;[dragFrom[0], dragTo[0]] = [dragTo[0], dragFrom[0]]
 				}
 				if (dragFrom[1] > dragTo[1]) {
-					const tmp = dragFrom[1]
-					dragFrom[1] = dragTo[1]
-					dragTo[1] = tmp
+					;[dragFrom[1], dragTo[1]] = [dragTo[1], dragFrom[1]]
 				}
 
 				Fractal.render(offset, height, [dragFrom, dragTo])
 			}
 
 			window.stopDrag = (ev) => {
+				ev.preventDefault()
+
 				Fractal.render(offset, height)
 				console.dir(`Selected: ${[dragFrom, dragTo]}`)
 				dragging = false

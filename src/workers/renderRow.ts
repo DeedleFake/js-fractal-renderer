@@ -72,9 +72,6 @@ const renderRow = (
 			const [check, iter] = mandelbrotIter(c)
 			const [sr, sg, sb] = mandelbrotColor(check, iter).array()
 
-			//r += rgbToLinear(sr)
-			//g += rgbToLinear(sg)
-			//b += rgbToLinear(sb)
 			r += sr
 			g += sg
 			b += sb
@@ -84,9 +81,6 @@ const renderRow = (
 			row,
 			x,
 			Color.rgb(
-				//linearToRGB(r / Config.Samples),
-				//linearToRGB(g / Config.Samples),
-				//linearToRGB(b / Config.Samples),
 				r / Config.Samples,
 				g / Config.Samples,
 				b / Config.Samples,

@@ -3,7 +3,6 @@
 import Color from 'color'
 
 import Complex from './complex'
-import { linearToRGB, rgbToLinear } from './linear'
 
 import WorkerPool from './workerPool'
 import RenderRowWorker from 'worker-loader!./workers/renderRow'

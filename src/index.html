@@ -19,8 +19,16 @@
 
 			#screen {
 				border: 2px blue solid;
+				border-radius: 8px;
 			}
 		</style>
+
+		<script type='application/javascript' defer>
+			document.addEventListener('DOMContentLoaded', () => {
+				//Fractal.render([-0.5557506, -0.5556], .000000001)
+				Fractal.render([-1.5, -1], 2)
+			})
+		</script>
 	</head>
 	<body>
 		<div class="row">

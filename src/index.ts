@@ -122,11 +122,22 @@ const renderer = new ShaderRenderer(canvas.getContext('webgl2'), shader, {
 	shaderVersion,
 })
 
-renderer.render({
-	resolution: new Float32Array([800, 800]),
-	//offset: new Float32Array([-0.5557506, -0.5556]),
-	//height: 0.000000001,
-	offset: new Float32Array([-1.5, -1]),
-	height: 2,
-	seed: new Date().getTime(),
-})
+declare global {
+	interface Window {
+		Fractal: {
+			render(offset: Float32Array, height: number): void
+		}
+	}
+}
+
+window.Fractal = {
+	render(offset: Float32Array, height: number): void {
+		renderer.render({
+			resolution: new Float32Array([canvas.width, canvas.height]),
+			seed: new Date().getTime(),
+
+			offset,
+			height,
+		})
+	},
+}

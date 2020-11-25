@@ -167,18 +167,24 @@ class ShaderRenderer {
 		}
 	}
 
-	render(uniform: Record<string, Uniform> = {}): void {
-		for (let [k, v] of Object.entries(uniform)) {
-			const h = this.gl.getUniformLocation(this.program, k)
-			if (h < 0) {
-				throw new Error(`unknown uniform: ${k}`)
-			}
+	async render(uniform: Record<string, Uniform> = {}): Promise<void> {
+		return new Promise((resolve, reject) => {
+			window.requestAnimationFrame(() => {
+				for (let [k, v] of Object.entries(uniform)) {
+					const h = this.gl.getUniformLocation(this.program, k)
+					if (h < 0) {
+						throw new Error(`unknown uniform: ${k}`)
+					}
 
-			this.setUniform(h, v)
-		}
+					this.setUniform(h, v)
+				}
 
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
-		this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+				this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
+				this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+
+				resolve()
+			})
+		})
 	}
 }
 

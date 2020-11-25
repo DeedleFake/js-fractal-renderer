@@ -14,7 +14,7 @@
 			.row {
 				display: flex;
 				flex-direction: row;
-				justify-content: space-around;
+				justify-content: center;
 			}
 
 			#screen {
@@ -23,16 +23,77 @@
 			}
 		</style>
 
-		<script type='application/javascript' defer>
+		<script type="application/javascript" defer>
+			let offset, height
+
+			let dragging = false
+			let dragFrom, dragTo
+
+			const zoom = (o, h) => {
+				offset = o
+				height = h
+				Fractal.render(offset, height)
+			}
+
+			const getMouseCoords = (ev) => {
+				const bounds = ev.target.getBoundingClientRect()
+				return [ev.clientX - bounds.x, ev.clientY - bounds.y]
+			}
+
+			window.startDrag = (ev) => {
+				dragFrom = getMouseCoords(ev)
+				dragging = true
+			}
+
+			window.mouseDrag = (ev) => {
+				if (!dragging) {
+					return
+				}
+
+				dragTo = getMouseCoords(ev)
+				if (dragFrom[0] > dragTo[0]) {
+					const tmp = dragFrom[0]
+					dragFrom[0] = dragTo[0]
+					dragTo[0] = tmp
+				}
+				if (dragFrom[1] > dragTo[1]) {
+					const tmp = dragFrom[1]
+					dragFrom[1] = dragTo[1]
+					dragTo[1] = tmp
+				}
+
+				Fractal.render(offset, height, [dragFrom, dragTo])
+			}
+
+			window.stopDrag = (ev) => {
+				Fractal.render(offset, height)
+				console.dir(`Selected: ${[dragFrom, dragTo]}`)
+				dragging = false
+			}
+
+			window.resetImage = () => {
+				//zoom([-0.5557506, -0.5556], .000000001)
+				zoom([-1.5, -1], 2)
+			}
+
 			document.addEventListener('DOMContentLoaded', () => {
-				//Fractal.render([-0.5557506, -0.5556], .000000001)
-				Fractal.render([-1.5, -1], 2)
+				resetImage()
 			})
 		</script>
 	</head>
 	<body>
 		<div class="row">
-			<canvas id="screen" width="800" height="800" />
+			<canvas
+				id="screen"
+				width="800"
+				height="800"
+				onmousedown="startDrag(event)"
+				onmousemove="mouseDrag(event)"
+				onmouseup="stopDrag(event)"
+			/>
+		</div>
+		<div class="row">
+			<button onclick="resetImage()">Reset</button>
 		</div>
 	</body>
 </html>

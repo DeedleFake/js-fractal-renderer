@@ -2,7 +2,7 @@
 
 import ShaderRenderer from './ShaderRenderer'
 
-const Samples = 50
+const Samples = 4
 const MaxIterations = 1500
 const IterHueAdjust = 800
 const Threshold = 4

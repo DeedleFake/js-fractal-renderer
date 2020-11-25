@@ -92,7 +92,7 @@ const shader = `#version ${shaderVersion} es
 
 	vec3 mandelbrotColor(in float check, in float iter) {
 		if (check > float(${Threshold})) {
-			return vec3(0, 0, 0);
+			return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, .5));
 		}
 
 		return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, .5));

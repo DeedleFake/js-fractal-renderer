@@ -1,68 +1,102 @@
 // @format
 
-import Color from 'color'
+import ShaderRenderer from './ShaderRenderer'
 
-import Complex from './complex'
+const Samples = 50
+const MaxIterations = 1500
+const IterHueAdjust = 800
+const Threshold = 4
 
-import WorkerPool from './workerPool'
-import RenderRowWorker from 'worker-loader!./workers/renderRow'
+const shader = `
+	precision highp float;
 
-const renderers = new WorkerPool(RenderRowWorker, 16)
+	uniform vec2 resolution;
+	uniform vec2 offset;
+	uniform float height;
 
-const renderRow = async (
-	img: { width: number; height: number },
-	position: Complex,
-	height: number,
-	y: number,
-): Promise<Uint8Array> => renderers.run({ img, position, height, y }) as any
+	void checkMandelbrot(inout float check, inout float iter, in vec2 position) {
+		vec2 cur = position;
+		for (int i = 0; i < ${MaxIterations}; i++) {
+			iter = float(i);
 
-const render = async (img: ImageData, position: Complex, height: number) => {
-	let progress = 0
-	document.getElementById('progress').innerHTML = `0/${img.height}`
-
-	let workers = new Array(img.height)
-	for (let y = 0; y < img.height; y++) {
-		workers[y] = (async (y: number) => {
-			const row = await renderRow(
-				{ width: img.width, height: img.height },
-				position,
-				height,
-				y,
-			)
-
-			const start = y * img.width * 4
-			for (let i = 0; i < row.length; i++) {
-				img.data[start + i] = row[i]
+			check = (cur.x * cur.x) + (cur.y * cur.y);
+			if (check > float(${Threshold})) {
+				break;
 			}
 
-			progress++
-			document.getElementById(
-				'progress',
-			).innerHTML = `${progress}/${img.height}`
-		})(y)
+			cur = vec2(
+				(cur.x * cur.x) - (cur.y * cur.y),
+				float(2) * cur.x * cur.y
+			) + position;
+		}
 	}
-	await Promise.all(workers)
 
-	console.log('Rendering finished.')
-}
+	float hueToRGB(in float p, in float q, in float t) {
+		if (t < 0.0) {
+			t++;
+		}
+		else if (t > 1.0) {
+			t--;
+		}
 
-const redraw = async (x: number, y: number, zoom: number) => {
-	const canvas = document.getElementById('screen') as HTMLCanvasElement
-	const ctx = canvas.getContext('2d')
+		if (t < 1.0 / 6.0) {
+			return p + (q - p) * 6.0 * t;
+		}
 
-	const img = ctx.createImageData(canvas.width, canvas.height)
-	await render(img, new Complex(x, y), zoom)
-	ctx.putImageData(img, 0, 0)
-}
+		if (t < 1.0 / 2.0) {
+			return q;
+		}
 
-redraw(-0.5557506, -0.5556, 0.000000001)
+		if (t < 2.0 / 3.0) {
+			return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+		}
 
-declare global {
-	interface Window {
-		MR: any
+		return p;
 	}
-}
 
-window.MR = {
-	redraw,
-}
+	vec3 hslToRGB(in vec3 hsl) {
+		if (hsl[1] == 0.0) {
+			return vec3(hsl[2], hsl[2], hsl[2]);
+		}
+
+		float q = hsl[2] + hsl[1] - (hsl[2] * hsl[1]);
+		if (hsl[2] < .5) {
+			q = hsl[2] * (1.0 + hsl[1]);
+		}
+		float p = 2.0 * hsl[2] - q;
+
+		return vec3(
+			hueToRGB(p, q, hsl[0] + (1.0 / 3.0)),
+			hueToRGB(p, q, hsl[0]),
+			hueToRGB(p, q, hsl[0] - (1.0 / 3.0))
+		);
+	}
+
+	vec3 mandelbrotColor(in float check, in float iter) {
+		if (check > float(${Threshold})) {
+			return vec3(0, 0, 0);
+		}
+
+		return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, .5));
+	}
+
+	void main() {
+		vec2 position = height * (gl_FragCoord.xy / resolution) + offset;
+
+		float check, iter;
+		checkMandelbrot(check, iter, position);
+
+		gl_FragColor = vec4(mandelbrotColor(check, iter), 1);
+	}
+`
+
+const canvas = document.getElementById('screen') as HTMLCanvasElement
+const renderer = new ShaderRenderer(canvas.getContext('webgl2'), shader)
+
+renderer.render({
+	resolution: new Float32Array([800, 800]),
+	//offset: new Float32Array([-0.5557506, -0.5556]),
+	//height: 0.000000001,
+	offset: new Float32Array([-1.5, -1]),
+	height: 2,
+})

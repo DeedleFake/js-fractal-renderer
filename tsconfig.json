@@ -9,7 +9,7 @@
 		"outDir": "./dist",
 		"sourceMap": true,
 		"allowSyntheticDefaultImports": true,
-		"lib": ["webworker", "es6", "dom"]
+		"lib": ["es6", "dom"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "**/*.spec.ts"]

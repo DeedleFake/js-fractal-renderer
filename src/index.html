@@ -27,8 +27,7 @@
 			;(() => {
 				let offset, height
 
-				let dragging = false
-				let dragFrom, dragTo
+				let dragFrom = null
 
 				const zoom = (o, h) => {
 					offset = o
@@ -49,43 +48,33 @@
 					ev.preventDefault()
 
 					dragFrom = getMouseCoords(ev)
-					dragging = true
 				}
 
 				window.mouseDrag = (ev) => {
-					if (!dragging) {
+					if (dragFrom == null) {
 						return
 					}
 
 					ev.preventDefault()
 
-					dragTo = getMouseCoords(ev)
-					if (dragFrom[0] > dragTo[0]) {
-						;[dragFrom[0], dragTo[0]] = [dragTo[0], dragFrom[0]]
-					}
-					if (dragFrom[1] > dragTo[1]) {
-						;[dragFrom[1], dragTo[1]] = [dragTo[1], dragFrom[1]]
-					}
+					const dragTo = getMouseCoords(ev)
+					const drag = [dragTo[0] - dragFrom[0], dragTo[1] - dragFrom[1]]
 
-					Fractal.render(offset, height, [dragFrom, dragTo])
+					const canvas = document.getElementById('screen')
+					const o = [
+						offset[0] - drag[0] / canvas.width * height,
+						offset[1] - drag[1] / canvas.height * height,
+					]
+					//const h = height * (dragTo[1] - dragFrom[1]) / canvas.height
+					zoom(o, height)
+
+					dragFrom = dragTo
 				}
 
 				window.stopDrag = (ev) => {
 					ev.preventDefault()
 
-					const canvas = document.getElementById('screen')
-					const dragCenter = [
-						(dragFrom[0] + dragTo[0]) / 2,
-						(dragFrom[1] + dragTo[1]) / 2,
-					]
-					const o = [
-						offset[0] + (dragCenter[0] - canvas.width / 2) / canvas.width * height,
-						offset[1] + (dragCenter[1] - canvas.height / 2) / canvas.height * height,
-					]
-					//const h = height * (dragTo[1] - dragFrom[1]) / canvas.height
-					zoom(o, height)
-
-					dragging = false
+					dragFrom = null
 				}
 
 				window.resetImage = () => {

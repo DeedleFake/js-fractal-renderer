@@ -17,10 +17,6 @@ const shader = `#version ${shaderVersion} es
 	uniform vec2 offset;
 	uniform float height;
 
-	uniform float dragging;
-	uniform vec2 dragFrom;
-	uniform vec2 dragTo;
-
 	out vec4 fragColor;
 
 	uint randState;
@@ -94,28 +90,12 @@ const shader = `#version ${shaderVersion} es
 		);
 	}
 
-	vec3 mandelbrotColor(in float check, in float iter, in bool selected) {
-		float lum = .5;
-		if (selected) {
-			lum = .75;
-		}
-
+	vec3 mandelbrotColor(in float check, in float iter) {
 		if (check > float(${Threshold})) {
-			return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, lum));
+			return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, .5));
 		}
 
-		return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, lum));
-	}
-
-	bool inDrag(in vec2 position) {
-		if (dragging == 0.0) {
-			return false;
-		}
-
-		if ((position.x < dragFrom.x) || (position.y < dragFrom.y) || (position.x > dragTo.x) || (position.y > dragTo.y)) {
-			return false;
-		}
-		return true;
+		return hslToRGB(vec3(iter / float(${IterHueAdjust}) * check, 1, .5));
 	}
 
 	void main() {
@@ -129,7 +109,7 @@ const shader = `#version ${shaderVersion} es
 			float check, iter;
 			checkMandelbrot(check, iter, position);
 
-			vec3 s = mandelbrotColor(check, iter, inDrag(gl_FragCoord.xy));
+			vec3 s = mandelbrotColor(check, iter);
 			col += s;
 		}
 
@@ -145,25 +125,19 @@ const renderer = new ShaderRenderer(canvas.getContext('webgl2'), shader, {
 declare global {
 	interface Window {
 		Fractal: {
-			render(offset: Float32Array, height: number, drag: [[number, number], [number, number]]): void
+			render(offset: Float32Array, height: number): void
 		}
 	}
 }
 
 window.Fractal = {
-	render(offset, height, drag = null): void {
+	render(offset, height): void {
 		renderer.render({
 			resolution: new Float32Array([canvas.width, canvas.height]),
 			seed: new Date().getTime(),
 
 			offset,
 			height,
-
-			dragging: drag != null ? 1 : 0,
-			...(drag != null && {
-				dragFrom: new Float32Array(drag[0]),
-				dragTo: new Float32Array(drag[1]),
-			}),
 		})
 	},
 }

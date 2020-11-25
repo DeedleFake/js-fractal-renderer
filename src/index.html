@@ -22,85 +22,13 @@
 				border-radius: 8px;
 			}
 		</style>
-
-		<script type="application/javascript" defer>
-			;(() => {
-				let offset, height
-
-				let dragFrom = null
-
-				const zoom = (o, h) => {
-					offset = o
-					height = h
-					Fractal.render(offset, height)
-				}
-
-				const getMouseCoords = (ev) => {
-					const bounds = ev.target.getBoundingClientRect()
-					return [
-						((ev.clientX - bounds.x) * ev.target.width) / bounds.width,
-						((bounds.height - (ev.clientY - bounds.y)) * ev.target.height) /
-							bounds.height,
-					]
-				}
-
-				window.startDrag = (ev) => {
-					ev.preventDefault()
-
-					dragFrom = getMouseCoords(ev)
-				}
-
-				window.mouseDrag = (ev) => {
-					if (dragFrom == null) {
-						return
-					}
-
-					ev.preventDefault()
-
-					const dragTo = getMouseCoords(ev)
-					const drag = [dragTo[0] - dragFrom[0], dragTo[1] - dragFrom[1]]
-
-					const canvas = document.getElementById('screen')
-					const o = [
-						offset[0] - drag[0] / canvas.width * height,
-						offset[1] - drag[1] / canvas.height * height,
-					]
-					//const h = height * (dragTo[1] - dragFrom[1]) / canvas.height
-					zoom(o, height)
-
-					dragFrom = dragTo
-				}
-
-				window.stopDrag = (ev) => {
-					ev.preventDefault()
-
-					dragFrom = null
-				}
-
-				window.resetImage = () => {
-					//zoom([-0.5557506, -0.5556], .000000001)
-					zoom([-1.5, -1], 2)
-				}
-
-				document.addEventListener('DOMContentLoaded', () => {
-					resetImage()
-				})
-			})()
-		</script>
 	</head>
 	<body>
 		<div class="row">
-			<canvas
-				id="screen"
-				width="800"
-				height="800"
-				onmousedown="startDrag(event)"
-				onmousemove="mouseDrag(event)"
-				onmouseup="stopDrag(event)"
-			/>
+			<canvas id="screen" width="800" height="800" />
 		</div>
 		<div class="row">
-			<button onclick="resetImage()">Reset</button>
+			<button id="reset">Reset</button>
 		</div>
 	</body>
 </html>

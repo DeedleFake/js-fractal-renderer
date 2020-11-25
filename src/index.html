@@ -24,63 +24,79 @@
 		</style>
 
 		<script type="application/javascript" defer>
-			let offset, height
+			;(() => {
+				let offset, height
 
-			let dragging = false
-			let dragFrom, dragTo
+				let dragging = false
+				let dragFrom, dragTo
 
-			const zoom = (o, h) => {
-				offset = o
-				height = h
-				Fractal.render(offset, height)
-			}
-
-			const getMouseCoords = (ev) => {
-				const bounds = ev.target.getBoundingClientRect()
-				return [ev.clientX - bounds.x, bounds.height - (ev.clientY - bounds.y)]
-			}
-
-			window.startDrag = (ev) => {
-				ev.preventDefault()
-
-				dragFrom = getMouseCoords(ev)
-				dragging = true
-			}
-
-			window.mouseDrag = (ev) => {
-				if (!dragging) {
-					return
+				const zoom = (o, h) => {
+					offset = o
+					height = h
+					Fractal.render(offset, height)
 				}
 
-				ev.preventDefault()
-
-				dragTo = getMouseCoords(ev)
-				if (dragFrom[0] > dragTo[0]) {
-					;[dragFrom[0], dragTo[0]] = [dragTo[0], dragFrom[0]]
+				const getMouseCoords = (ev) => {
+					const bounds = ev.target.getBoundingClientRect()
+					return [
+						((ev.clientX - bounds.x) * ev.target.width) / bounds.width,
+						((bounds.height - (ev.clientY - bounds.y)) * ev.target.height) /
+							bounds.height,
+					]
 				}
-				if (dragFrom[1] > dragTo[1]) {
-					;[dragFrom[1], dragTo[1]] = [dragTo[1], dragFrom[1]]
+
+				window.startDrag = (ev) => {
+					ev.preventDefault()
+
+					dragFrom = getMouseCoords(ev)
+					dragging = true
 				}
 
-				Fractal.render(offset, height, [dragFrom, dragTo])
-			}
+				window.mouseDrag = (ev) => {
+					if (!dragging) {
+						return
+					}
 
-			window.stopDrag = (ev) => {
-				ev.preventDefault()
+					ev.preventDefault()
 
-				Fractal.render(offset, height)
-				console.dir(`Selected: ${[dragFrom, dragTo]}`)
-				dragging = false
-			}
+					dragTo = getMouseCoords(ev)
+					if (dragFrom[0] > dragTo[0]) {
+						;[dragFrom[0], dragTo[0]] = [dragTo[0], dragFrom[0]]
+					}
+					if (dragFrom[1] > dragTo[1]) {
+						;[dragFrom[1], dragTo[1]] = [dragTo[1], dragFrom[1]]
+					}
 
-			window.resetImage = () => {
-				//zoom([-0.5557506, -0.5556], .000000001)
-				zoom([-1.5, -1], 2)
-			}
+					Fractal.render(offset, height, [dragFrom, dragTo])
+				}
 
-			document.addEventListener('DOMContentLoaded', () => {
-				resetImage()
-			})
+				window.stopDrag = (ev) => {
+					ev.preventDefault()
+
+					const canvas = document.getElementById('screen')
+					const dragCenter = [
+						(dragFrom[0] + dragTo[0]) / 2,
+						(dragFrom[1] + dragTo[1]) / 2,
+					]
+					const o = [
+						offset[0] + (dragCenter[0] - canvas.width / 2) / canvas.width * height,
+						offset[1] + (dragCenter[1] - canvas.height / 2) / canvas.height * height,
+					]
+					//const h = height * (dragTo[1] - dragFrom[1]) / canvas.height
+					zoom(o, height)
+
+					dragging = false
+				}
+
+				window.resetImage = () => {
+					//zoom([-0.5557506, -0.5556], .000000001)
+					zoom([-1.5, -1], 2)
+				}
+
+				document.addEventListener('DOMContentLoaded', () => {
+					resetImage()
+				})
+			})()
 		</script>
 	</head>
 	<body>

@@ -7,12 +7,30 @@ const MaxIterations = 1500
 const IterHueAdjust = 800
 const Threshold = 4
 
-const shader = `
+const shaderVersion = 300
+
+const shader = `#version ${shaderVersion} es
 	precision highp float;
 
 	uniform vec2 resolution;
 	uniform vec2 offset;
 	uniform float height;
+	uniform float seed;
+
+	out vec4 fragColor;
+
+	uint randState;
+
+	uint randUint() {
+		randState ^= randState << 13;
+		randState ^= randState >> 17;
+		randState ^= randState << 5;
+		return randState;
+	}
+
+	float randFloat() {
+		return 1.0 / float(randUint());
+	}
 
 	void checkMandelbrot(inout float check, inout float iter, in vec2 position) {
 		vec2 cur = position;
@@ -81,17 +99,28 @@ const shader = `
 	}
 
 	void main() {
-		vec2 position = height * (gl_FragCoord.xy / resolution) + offset;
+		randState = uint(float(seed) + gl_FragCoord.x / gl_FragCoord.y);
 
-		float check, iter;
-		checkMandelbrot(check, iter, position);
+		vec3 col;
+		for (int i = 0; i < ${Samples}; i++) {
+			vec2 position = (gl_FragCoord.xy + vec2(randFloat(), randFloat())) / resolution;
+			position = height * position + offset;
 
-		gl_FragColor = vec4(mandelbrotColor(check, iter), 1);
+			float check, iter;
+			checkMandelbrot(check, iter, position);
+
+			vec3 s = mandelbrotColor(check, iter);
+			col += s;
+		}
+
+		fragColor = vec4(col / float(${Samples}), 1);
 	}
 `
 
 const canvas = document.getElementById('screen') as HTMLCanvasElement
-const renderer = new ShaderRenderer(canvas.getContext('webgl2'), shader)
+const renderer = new ShaderRenderer(canvas.getContext('webgl2'), shader, {
+	shaderVersion,
+})
 
 renderer.render({
 	resolution: new Float32Array([800, 800]),
@@ -99,4 +128,5 @@ renderer.render({
 	//height: 0.000000001,
 	offset: new Float32Array([-1.5, -1]),
 	height: 2,
+	seed: new Date().getTime(),
 })

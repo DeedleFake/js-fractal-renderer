@@ -2,15 +2,22 @@
 
 export type Uniform = number | Float32Array
 
-const vertex = `
+export type ShaderRendererOptions = {
+	shaderVersion: number
+}
+
+const defaultOptions: ShaderRendererOptions = {
+	shaderVersion: 100,
+}
+
+const vertex = (version: number) => `#version ${version} es
 	precision highp float;
 
-	attribute vec4 aVertexPosition;
-
-	uniform mat4 uProjectionMatrix;
+	uniform mat4 projectionMatrix;
+	in vec4 vertexPosition;
 
 	void main() {
-		gl_Position = uProjectionMatrix * aVertexPosition;
+		gl_Position = projectionMatrix * vertexPosition;
 	}
 `
 
@@ -48,15 +55,19 @@ class ShaderRenderer {
 
 	program: WebGLProgram
 	attrib = {
-		aVertexPosition: -1,
+		vertexPosition: -1,
 	}
 	uniform = {
-		uProjectionMatrix: -1,
+		projectionMatrix: -1,
 	}
 
-	constructor(gl: WebGL2RenderingContext, fragment: string) {
+	constructor(
+		gl: WebGL2RenderingContext,
+		fragment: string,
+		options: ShaderRendererOptions = defaultOptions,
+	) {
 		this.gl = gl
-		this.init(vertex, fragment)
+		this.init(vertex(options.shaderVersion), fragment)
 	}
 
 	init(vertex: string, fragment: string): void {
@@ -96,17 +107,17 @@ class ShaderRenderer {
 			this.gl.STATIC_DRAW,
 		)
 		this.gl.vertexAttribPointer(
-			this.attrib.aVertexPosition,
+			this.attrib.vertexPosition,
 			2,
 			this.gl.FLOAT,
 			false,
 			0,
 			0,
 		)
-		this.gl.enableVertexAttribArray(this.attrib.aVertexPosition)
+		this.gl.enableVertexAttribArray(this.attrib.vertexPosition)
 
 		this.gl.uniformMatrix4fv(
-			this.uniform.uProjectionMatrix,
+			this.uniform.projectionMatrix,
 			false,
 			orthographicProjection(0, 1, 1, 0, -1, 1),
 		)

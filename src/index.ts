@@ -12,9 +12,9 @@ const fragmentShader = fragmentTemplate({
 	shaderVersion,
 })
 
-const canvas = document.getElementById('screen') as HTMLCanvasElement
+const screen = document.getElementById('screen') as HTMLCanvasElement
 const renderer = new ShaderRenderer(
-	canvas.getContext('webgl2'),
+	screen.getContext('webgl2'),
 	fragmentShader,
 	{
 		shaderVersion,
@@ -36,10 +36,10 @@ const controls = getElements(
 		iterHueAdjust: 800,
 		threshold: 4,
 
-		//offset: [-0.5557506, -0.5556],
-		//height: 100000000,
+		//offset: new Float32Array([-0.5557506, -0.5556]),
+		//scale: 100000000,
 		offset: new Float32Array([-1.5, -1]),
-		height: 0.5,
+		scale: 0.5,
 	}
 	let state = { ...defaultState }
 
@@ -60,20 +60,28 @@ const controls = getElements(
 
 		await renderer.render({
 			...state,
-			resolution: new Float32Array([canvas.width, canvas.height]),
+			resolution: new Float32Array([screen.width, screen.height]),
 			seed: new Date().getTime(),
 		})
 	}
 
-	const swToFW = (w: number): number => (w / canvas.width) / state.height
-	const shToFH = (h: number): number => (h / canvas.height) / state.height
+	const sx2fx = (x: number): number =>
+		x / screen.width / state.scale + state.offset[0]
+	const sy2fy = (y: number): number =>
+		y / screen.height / state.scale + state.offset[1]
+	const fx2sx = (x: number): number =>
+		(x - state.offset[0]) * state.scale * screen.width
+	const fy2sy = (y: number): number =>
+		(y - state.offset[1]) * state.scale * screen.height
 
 	const getMouseCoords = (ev: MouseEvent): [number, number] => {
-		const bounds = canvas.getBoundingClientRect()
+		const bounds = screen.getBoundingClientRect()
 		return [
-			((ev.clientX - bounds.x) * canvas.width) / bounds.width,
-			((bounds.height - (ev.clientY - bounds.y)) * canvas.height) /
-				bounds.height,
+			sx2fx(((ev.clientX - bounds.x) * screen.width) / bounds.width),
+			sy2fy(
+				((bounds.height - (ev.clientY - bounds.y)) * screen.height) /
+					bounds.height,
+			),
 		]
 	}
 
@@ -95,12 +103,12 @@ const controls = getElements(
 
 		setState({
 			offset: new Float32Array([
-				state.offset[0] - swToFW(drag[0]),
-				state.offset[1] - shToFH(drag[1]),
+				state.offset[0] - drag[0],
+				state.offset[1] - drag[1],
 			]),
 		})
 
-		dragFrom = dragTo
+		dragFrom = getMouseCoords(ev)
 	}
 
 	const stopDrag = (ev: MouseEvent): void => {
@@ -116,35 +124,36 @@ const controls = getElements(
 			return
 		}
 
-		let height = state.height
+		const mouse = getMouseCoords(ev)
+
+		let scale = state.scale
 		switch (true) {
 			case ev.deltaY < 0:
-				height *= zoomSpeed
-				//state.offset = [
-				//	state.offset[0] + swToFW(canvas.width / 2),
-				//	state.offset[1] + shToFH(canvas.height / 2),
-				//]
+				scale *= zoomSpeed
 				break
 
 			case ev.deltaY > 0:
-				height /= zoomSpeed
+				scale /= zoomSpeed
 				break
 
 			default:
 				return
 		}
 
-		setState({ height })
+		console.dir({ mouse })
+		setState({
+			//offset: new Float32Array([
+			//	mouse[0] / state.scale - state.offset[0],
+			//	mouse[1] / state.scale - state.offset[1],
+			//]),
+			//scale,
+		})
 	}
 
-	const resetImage = (): void => {
-		setState(defaultState)
-	}
-
-	canvas.addEventListener('mousedown', startDrag)
-	canvas.addEventListener('mousemove', mouseDrag)
-	canvas.addEventListener('mouseup', stopDrag)
-	canvas.addEventListener('wheel', zoom)
+	screen.addEventListener('mousedown', startDrag)
+	screen.addEventListener('mousemove', mouseDrag)
+	screen.addEventListener('mouseup', stopDrag)
+	screen.addEventListener('wheel', zoom)
 
 	controls.incthresh.addEventListener('click', () => {
 		setState({ threshold: state.threshold + 1 })
@@ -153,7 +162,7 @@ const controls = getElements(
 		setState({ threshold: state.threshold - 1 })
 	})
 
-	controls.reset.addEventListener('click', resetImage)
+	controls.reset.addEventListener('click', () => setState(defaultState))
 
-	resetImage()
+	setState(defaultState)
 })()

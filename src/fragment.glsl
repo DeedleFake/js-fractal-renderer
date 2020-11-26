@@ -10,7 +10,7 @@ uniform float iterHueAdjust;
 uniform float threshold;
 
 uniform vec2 offset;
-uniform float height;
+uniform float scale;
 
 out vec4 fragColor;
 
@@ -99,7 +99,7 @@ void main() {
 	vec3 col;
 	for (int i = 0; i < int(samples); i++) {
 		vec2 position = (gl_FragCoord.xy + vec2(randFloat(), randFloat())) / resolution;
-		position = position / height + offset;
+		position = position / scale + offset;
 
 		float check, iter;
 		checkMandelbrot(check, iter, position);

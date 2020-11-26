@@ -7,7 +7,7 @@
     "start": "webpack serve",
     "build": "webpack",
     "clean": "rm -fr dist",
-    "prettier": "find src -iname '*.ts' -exec prettier -w {} +"
+    "prettier": "find src \\( -iname '*.ts' -o -iname '*.html' \\) -exec prettier -w {} +"
   },
   "devDependencies": {
     "@types/color": "^3.0.1",

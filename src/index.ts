@@ -58,10 +58,6 @@ const controls = getElements(
 			c.innerHTML = `${v}`
 		}
 
-		const bounds = screen.parentElement.getBoundingClientRect()
-		screen.width = bounds.width
-		screen.height = bounds.height
-
 		await renderer.render({
 			...state,
 			resolution: new Float32Array([screen.width, screen.height]),

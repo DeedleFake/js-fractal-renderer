@@ -15,6 +15,9 @@
 				bottom: 0px;
 				left: 0px;
 				right: 0px;
+
+				color: white;
+				background-color: black;
 			}
 
 			.controls {
@@ -24,8 +27,6 @@
 				align-items: center;
 
 				padding: 8px;
-				color: white;
-				background-color: black;
 			}
 
 			.controls > * {
@@ -52,6 +53,7 @@
 
 			.screen-wrapper {
 				display: flex;
+				justify-content: center;
 
 				flex: 1;
 				padding: 0px;
@@ -72,7 +74,7 @@
 		</div>
 
 		<div class="screen-wrapper">
-			<canvas id="screen" />
+			<canvas id="screen" width="1024" height="1024" />
 		</div>
 	</body>
 </html>

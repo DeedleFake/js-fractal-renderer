@@ -70,7 +70,8 @@ const controls = getElements(
 	}
 
 	const sx2fx = (x: number, scale = state.scale): number =>
-		x / screen.width * (screen.width / screen.height) / scale + state.offset[0]
+		((x / screen.width) * (screen.width / screen.height)) / scale +
+		state.offset[0]
 	const sy2fy = (y: number, scale = state.scale): number =>
 		y / screen.height / scale + state.offset[1]
 	const s2f = (c: [number, number], scale = state.scale): [number, number] => [
@@ -79,7 +80,8 @@ const controls = getElements(
 	]
 
 	const fx2sx = (x: number, scale = state.scale): number =>
-		(x - state.offset[0]) * scale / (screen.width / screen.height) * screen.width
+		(((x - state.offset[0]) * scale) / (screen.width / screen.height)) *
+		screen.width
 	const fy2sy = (y: number, scale = state.scale): number =>
 		(y - state.offset[1]) * scale * screen.height
 	const f2s = (c: [number, number], scale = state.scale): [number, number] => [

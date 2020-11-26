@@ -65,30 +65,37 @@ const controls = getElements(
 		})
 	}
 
-	const sx2fx = (x: number): number =>
-		x / screen.width / state.scale + state.offset[0]
-	const sy2fy = (y: number): number =>
-		y / screen.height / state.scale + state.offset[1]
-	const fx2sx = (x: number): number =>
-		(x - state.offset[0]) * state.scale * screen.width
-	const fy2sy = (y: number): number =>
-		(y - state.offset[1]) * state.scale * screen.height
+	const sx2fx = (x: number, scale = state.scale): number =>
+		x / screen.width / scale + state.offset[0]
+	const sy2fy = (y: number, scale = state.scale): number =>
+		y / screen.height / scale + state.offset[1]
+	const s2f = (c: [number, number], scale = state.scale): [number, number] => [
+		sx2fx(c[0], scale),
+		sy2fy(c[1], scale),
+	]
+
+	const fx2sx = (x: number, scale = state.scale): number =>
+		(x - state.offset[0]) * scale * screen.width
+	const fy2sy = (y: number, scale = state.scale): number =>
+		(y - state.offset[1]) * scale * screen.height
+	const f2s = (c: [number, number], scale = state.scale): [number, number] => [
+		fx2sx(c[0], scale),
+		fy2sy(c[1], scale),
+	]
 
 	const getMouseCoords = (ev: MouseEvent): [number, number] => {
 		const bounds = screen.getBoundingClientRect()
 		return [
-			sx2fx(((ev.clientX - bounds.x) * screen.width) / bounds.width),
-			sy2fy(
-				((bounds.height - (ev.clientY - bounds.y)) * screen.height) /
-					bounds.height,
-			),
+			((ev.clientX - bounds.x) * screen.width) / bounds.width,
+			((bounds.height - (ev.clientY - bounds.y)) * screen.height) /
+				bounds.height,
 		]
 	}
 
 	const startDrag = (ev: MouseEvent): void => {
 		ev.preventDefault()
 
-		dragFrom = getMouseCoords(ev)
+		dragFrom = s2f(getMouseCoords(ev))
 	}
 
 	const mouseDrag = (ev: MouseEvent): void => {
@@ -98,7 +105,7 @@ const controls = getElements(
 
 		ev.preventDefault()
 
-		const dragTo = getMouseCoords(ev)
+		const dragTo = s2f(getMouseCoords(ev))
 		const drag = [dragTo[0] - dragFrom[0], dragTo[1] - dragFrom[1]]
 
 		setState({
@@ -108,7 +115,7 @@ const controls = getElements(
 			]),
 		})
 
-		dragFrom = getMouseCoords(ev)
+		dragFrom = s2f(getMouseCoords(ev))
 	}
 
 	const stopDrag = (ev: MouseEvent): void => {
@@ -124,8 +131,6 @@ const controls = getElements(
 			return
 		}
 
-		const mouse = getMouseCoords(ev)
-
 		let scale = state.scale
 		switch (true) {
 			case ev.deltaY < 0:
@@ -140,13 +145,19 @@ const controls = getElements(
 				return
 		}
 
-		console.dir({ mouse })
+		const mouse = getMouseCoords(ev)
+		const oldMouse = s2f(mouse, scale)
+		const newMouse = s2f(
+			[(mouse[0] * scale) / state.scale, (mouse[1] * scale) / state.scale],
+			scale,
+		)
+
 		setState({
-			//offset: new Float32Array([
-			//	mouse[0] / state.scale - state.offset[0],
-			//	mouse[1] / state.scale - state.offset[1],
-			//]),
-			//scale,
+			offset: new Float32Array([
+				state.offset[0] + (newMouse[0] - oldMouse[0]),
+				state.offset[1] + (newMouse[1] - oldMouse[1]),
+			]),
+			scale,
 		})
 	}
 

@@ -30,23 +30,32 @@ const controls = getElements(
 )
 
 ;(() => {
-	const defaultState = {
-		samples: 4,
-		maxIterations: 1500,
-		iterHueAdjust: 800,
-		threshold: 4,
+	const defaultState = () => {
+		const bounds = screen.parentElement.getBoundingClientRect()
+		const scale = 0.5
+		return {
+			samples: 4,
+			maxIterations: 1500,
+			iterHueAdjust: 800,
+			threshold: 4,
 
-		//offset: new Float32Array([-0.5557506, -0.5556]),
-		//scale: 100000000,
-		offset: new Float32Array([-1.5, -1]),
-		scale: 0.5,
+			//offset: new Float32Array([-0.5557506, -0.5556]),
+			//scale: 100000000,
+			offset: new Float32Array([
+				((-bounds.width / 2 / bounds.width) * (bounds.width / bounds.height)) /
+					scale -
+					0.5,
+				-bounds.height / 2 / bounds.height / scale,
+			]),
+			scale,
+		}
 	}
-	let state = { ...defaultState }
+	let state = { ...defaultState() }
 
 	let dragFrom: [number, number] = null
 
 	const setState = async (
-		partialState: Partial<typeof defaultState> = {},
+		partialState: Partial<ReturnType<typeof defaultState>> = {},
 	): Promise<void> => {
 		state = { ...state, ...partialState }
 		for (let [k, v] of Object.entries(state)) {
@@ -58,6 +67,8 @@ const controls = getElements(
 			c.innerHTML = `${v}`
 		}
 
+		screen.width = 100
+		screen.height = 100
 		const bounds = screen.parentElement.getBoundingClientRect()
 		screen.width = bounds.width
 		screen.height = bounds.height
@@ -179,9 +190,9 @@ const controls = getElements(
 		setState({ threshold: state.threshold - 1 })
 	})
 
-	controls.reset.addEventListener('click', () => setState(defaultState))
+	controls.reset.addEventListener('click', () => setState(defaultState()))
 
-	setState(defaultState)
+	setState(defaultState())
 
 	window.addEventListener('resize', () => setState())
 })()

@@ -10,44 +10,69 @@
 
 				margin: 0px;
 				padding: 0px;
+				position: absolute;
+				top: 0px;
+				bottom: 0px;
+				left: 0px;
+				right: 0px;
+			}
+
+			.controls {
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: center;
+
+				padding: 8px;
 				color: white;
 				background-color: black;
 			}
 
-			body > * {
-				margin-top: 8px;
+			.controls > * {
+				margin-left: 8px;
 			}
 
-			.row {
+			.controls > *:first-child {
+				margin-left: 0px;
+			}
+
+			.controls > .group {
 				display: flex;
 				flex-direction: row;
 				justify-content: center;
 			}
 
-			.row > * {
+			.controls > .group > * {
 				margin-left: 8px;
 			}
 
-			.row > *:first-child {
+			.controls > .group > *:first-child {
 				margin-left: 0px;
 			}
 
-			#screen {
-				border: 2px blue solid;
-				border-radius: 8px;
+			.screen-wrapper {
+				display: flex;
+
+				flex: 1;
+				padding: 0px;
 			}
 		</style>
 	</head>
 	<body>
-		<div class="row">
-			<canvas id="screen" width="800" height="800" />
-		</div>
-		<div class="row">
-			<button id="incthresh">+</button>
-			<div id="threshold">...</div>
-			<button id="decthresh">-</button>
+		<div class="controls">
+			<div class="group">
+				<button id="incthresh">+</button>
+				<div id="threshold">...</div>
+				<button id="decthresh">-</button>
+			</div>
 
-			<button id="reset">Reset Image</button>
+			<div class="group">
+				<button id="reset">Reset Image</button>
+			</div>
+		</div>
+
+		<div class="screen-wrapper">
+			<canvas id="screen" />
 		</div>
 	</body>
 </html>

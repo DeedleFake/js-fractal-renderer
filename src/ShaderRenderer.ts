@@ -170,6 +170,7 @@ class ShaderRenderer {
 	async render(uniform: Record<string, Uniform> = {}): Promise<void> {
 		return new Promise((resolve, reject) => {
 			window.requestAnimationFrame(() => {
+				this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
 				for (let [k, v] of Object.entries(uniform)) {
 					const h = this.gl.getUniformLocation(this.program, k)
 					if (h < 0) {

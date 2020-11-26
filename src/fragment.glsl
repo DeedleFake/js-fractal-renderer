@@ -99,7 +99,7 @@ void main() {
 	vec3 col;
 	for (int i = 0; i < int(samples); i++) {
 		vec2 position = (gl_FragCoord.xy + vec2(randFloat(), randFloat())) / resolution;
-		//position.x *= resolution.x / resolution.y;
+		position.x *= resolution.x / resolution.y;
 		position = position / scale + offset;
 
 		float check, iter;

@@ -99,7 +99,7 @@ void main() {
 	vec3 col;
 	for (int i = 0; i < int(samples); i++) {
 		vec2 position = (gl_FragCoord.xy + vec2(randFloat(), randFloat())) / resolution;
-		position = height * position + offset;
+		position = position / height + offset;
 
 		float check, iter;
 		checkMandelbrot(check, iter, position);

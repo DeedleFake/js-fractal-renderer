@@ -3,13 +3,13 @@
 import ShaderRenderer from './ShaderRenderer'
 import fragmentTemplate from 'underscore-template-loader!./fragment.glsl'
 
-import { copyObject, getElements } from './util'
+import { getElements } from './util'
 
-const ZoomSpeed = 1.1
-const ShaderVersion = 300
+const zoomSpeed = 1.1
+const shaderVersion = 300
 
 const fragmentShader = fragmentTemplate({
-	shaderVersion: ShaderVersion,
+	shaderVersion,
 })
 
 const canvas = document.getElementById('screen') as HTMLCanvasElement
@@ -17,7 +17,7 @@ const renderer = new ShaderRenderer(
 	canvas.getContext('webgl2'),
 	fragmentShader,
 	{
-		shaderVersion: ShaderVersion,
+		shaderVersion,
 	},
 )
 
@@ -30,32 +30,43 @@ const controls = getElements(
 )
 
 ;(() => {
-	const defaultRenderOptions = {
+	const defaultState = {
 		samples: 4,
 		maxIterations: 1500,
 		iterHueAdjust: 800,
 		threshold: 4,
 
 		//offset: [-0.5557506, -0.5556],
-		//height: .000000001,
+		//height: 100000000,
 		offset: new Float32Array([-1.5, -1]),
-		height: 2,
+		height: 0.5,
 	}
+	let state = { ...defaultState }
 
-	let renderOptions = copyObject(defaultRenderOptions)
 	let dragFrom: [number, number] = null
 
-	const render = async (): Promise<void> =>
+	const setState = async (
+		partialState: Partial<typeof defaultState> = {},
+	): Promise<void> => {
+		state = { ...state, ...partialState }
+		for (let [k, v] of Object.entries(state)) {
+			const c = controls[k]
+			if (c == null) {
+				continue
+			}
+
+			c.innerHTML = `${v}`
+		}
+
 		await renderer.render({
-			...renderOptions,
+			...state,
 			resolution: new Float32Array([canvas.width, canvas.height]),
 			seed: new Date().getTime(),
 		})
+	}
 
-	const swToFW = (w: number): number =>
-		(w / canvas.width) * renderOptions.height
-	const shToFH = (h: number): number =>
-		(h / canvas.height) * renderOptions.height
+	const swToFW = (w: number): number => (w / canvas.width) / state.height
+	const shToFH = (h: number): number => (h / canvas.height) / state.height
 
 	const getMouseCoords = (ev: MouseEvent): [number, number] => {
 		const bounds = canvas.getBoundingClientRect()
@@ -82,11 +93,12 @@ const controls = getElements(
 		const dragTo = getMouseCoords(ev)
 		const drag = [dragTo[0] - dragFrom[0], dragTo[1] - dragFrom[1]]
 
-		renderOptions.offset = new Float32Array([
-			renderOptions.offset[0] - swToFW(drag[0]),
-			renderOptions.offset[1] - shToFH(drag[1]),
-		])
-		render()
+		setState({
+			offset: new Float32Array([
+				state.offset[0] - swToFW(drag[0]),
+				state.offset[1] - shToFH(drag[1]),
+			]),
+		})
 
 		dragFrom = dragTo
 	}
@@ -104,30 +116,29 @@ const controls = getElements(
 			return
 		}
 
+		let height = state.height
 		switch (true) {
 			case ev.deltaY < 0:
-				renderOptions.height /= ZoomSpeed
-				//renderOptions.offset = [
-				//	renderOptions.offset[0] + swToFW(canvas.width / 2),
-				//	renderOptions.offset[1] + shToFH(canvas.height / 2),
+				height *= zoomSpeed
+				//state.offset = [
+				//	state.offset[0] + swToFW(canvas.width / 2),
+				//	state.offset[1] + shToFH(canvas.height / 2),
 				//]
 				break
 
 			case ev.deltaY > 0:
-				renderOptions.height *= ZoomSpeed
+				height /= zoomSpeed
 				break
 
 			default:
 				return
 		}
 
-		render()
+		setState({ height })
 	}
 
 	const resetImage = (): void => {
-		renderOptions = copyObject(defaultRenderOptions)
-		controls.threshold.innerHTML = `${renderOptions.threshold}`
-		render()
+		setState(defaultState)
 	}
 
 	canvas.addEventListener('mousedown', startDrag)
@@ -136,14 +147,10 @@ const controls = getElements(
 	canvas.addEventListener('wheel', zoom)
 
 	controls.incthresh.addEventListener('click', () => {
-		renderOptions.threshold++
-		controls.threshold.innerHTML = `${renderOptions.threshold}`
-		render()
+		setState({ threshold: state.threshold + 1 })
 	})
 	controls.decthresh.addEventListener('click', () => {
-		renderOptions.threshold--
-		controls.threshold.innerHTML = `${renderOptions.threshold}`
-		render()
+		setState({ threshold: state.threshold - 1 })
 	})
 
 	controls.reset.addEventListener('click', resetImage)

@@ -3,6 +3,12 @@ precision highp float;
 
 uniform vec2 resolution;
 uniform float seed;
+
+uniform float samples;
+uniform float maxIterations;
+uniform float iterHueAdjust;
+uniform float threshold;
+
 uniform vec2 offset;
 uniform float height;
 
@@ -23,11 +29,11 @@ float randFloat() {
 
 void checkMandelbrot(inout float check, inout float iter, in vec2 position) {
 	vec2 cur = position;
-	for (int i = 0; i < <%= maxIterations %>; i++) {
+	for (int i = 0; i < int(maxIterations); i++) {
 		iter = float(i);
 
 		check = (cur.x * cur.x) + (cur.y * cur.y);
-		if (check > float(<%= threshold %>)) {
+		if (check > threshold) {
 			break;
 		}
 
@@ -80,18 +86,18 @@ vec3 hslToRGB(in vec3 hsl) {
 }
 
 vec3 mandelbrotColor(in float check, in float iter) {
-	if (check > float(<%= threshold %>)) {
-		return hslToRGB(vec3(iter / float(<%= iterHueAdjust %>) * check, 1, .5));
+	if (check > threshold) {
+		return hslToRGB(vec3(iter / iterHueAdjust * check, 1, .5));
 	}
 
-	return hslToRGB(vec3(iter / float(<%= iterHueAdjust %>) * check, 1, .5));
+	return hslToRGB(vec3(iter / iterHueAdjust * check, 1, .5));
 }
 
 void main() {
 	randState = uint(float(seed) + gl_FragCoord.x / gl_FragCoord.y);
 
 	vec3 col;
-	for (int i = 0; i < <%= samples %>; i++) {
+	for (int i = 0; i < int(samples); i++) {
 		vec2 position = (gl_FragCoord.xy + vec2(randFloat(), randFloat())) / resolution;
 		position = height * position + offset;
 
@@ -102,5 +108,5 @@ void main() {
 		col += s;
 	}
 
-	fragColor = vec4(col / float(<%= samples %>), 1);
+	fragColor = vec4(col / samples, 1);
 }

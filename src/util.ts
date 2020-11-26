@@ -8,3 +8,8 @@ export const copyObject = <T extends Record<string, any>>(obj: T): T =>
 		}),
 		{} as T,
 	)
+
+export const getElements = (
+	...ids: Array<string>
+): Record<string, HTMLElement> =>
+	ids.reduce((obj, id) => ({ ...obj, [id]: document.getElementById(id) }), {})

@@ -3,7 +3,7 @@
 import ShaderRenderer from './ShaderRenderer'
 import fragmentTemplate from 'underscore-template-loader!./fragment.glsl'
 
-import {copyObject} from './util'
+import { copyObject, getElements } from './util'
 
 const ZoomSpeed = 1.1
 const ShaderVersion = 300
@@ -21,7 +21,13 @@ const renderer = new ShaderRenderer(
 	},
 )
 
-const reset = document.getElementById('reset')
+const controls = getElements(
+	'incthresh',
+	'threshold',
+	'decthresh',
+
+	'reset',
+)
 
 ;(() => {
 	const defaultRenderOptions = {
@@ -120,6 +126,7 @@ const reset = document.getElementById('reset')
 
 	const resetImage = (): void => {
 		renderOptions = copyObject(defaultRenderOptions)
+		controls.threshold.innerHTML = `${renderOptions.threshold}`
 		render()
 	}
 
@@ -128,7 +135,18 @@ const reset = document.getElementById('reset')
 	canvas.addEventListener('mouseup', stopDrag)
 	canvas.addEventListener('wheel', zoom)
 
-	reset.addEventListener('click', resetImage)
+	controls.incthresh.addEventListener('click', () => {
+		renderOptions.threshold++
+		controls.threshold.innerHTML = `${renderOptions.threshold}`
+		render()
+	})
+	controls.decthresh.addEventListener('click', () => {
+		renderOptions.threshold--
+		controls.threshold.innerHTML = `${renderOptions.threshold}`
+		render()
+	})
+
+	controls.reset.addEventListener('click', resetImage)
 
 	resetImage()
 })()

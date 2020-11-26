@@ -8,13 +8,28 @@
 				display: flex;
 				flex-direction: column;
 
+				margin: 0px;
+				padding: 0px;
+				color: white;
 				background-color: black;
+			}
+
+			body > * {
+				margin-top: 8px;
 			}
 
 			.row {
 				display: flex;
 				flex-direction: row;
 				justify-content: center;
+			}
+
+			.row > * {
+				margin-left: 8px;
+			}
+
+			.row > *:first-child {
+				margin-left: 0px;
 			}
 
 			#screen {
@@ -28,7 +43,11 @@
 			<canvas id="screen" width="800" height="800" />
 		</div>
 		<div class="row">
-			<button id="reset">Reset</button>
+			<button id="incthresh">+</button>
+			<div id="threshold">...</div>
+			<button id="decthresh">-</button>
+
+			<button id="reset">Reset Image</button>
 		</div>
 	</body>
 </html>
